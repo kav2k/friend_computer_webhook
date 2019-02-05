@@ -1,0 +1,6 @@
+{
+    "discordWebhookURL": "https://discordapp.com/api/webhooks/<ID>/<Key>",
+    "authKey": "<Random String>",
+    "port": 8000,
+    "host": "localhost"
+}
