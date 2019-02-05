@@ -30,6 +30,14 @@
     }
     ```
 
+4. (Optional) Set up a systemd service unit.
+
+    * Adapt values in `friend-computer-webhook.service` to real user/path
+    * Copy to `/etc/systemd/system/`
+    * Run `sudo systemctl daemon-reload`
+    * Test service with `sudo systemctl start friend-computer-webhook` and `sudo systemctl status friend-computer-webhook`
+    * Enable service with `sudo systemctl enable friend-computer-webhook` to survive reboot
+
 ## IFTTT setup
 
 1. If not owner of the YouTube channel in question, make sure your YouTube account is subscribed to that channel.

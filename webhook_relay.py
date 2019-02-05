@@ -57,7 +57,7 @@ class Server(BaseHTTPRequestHandler):
 
         post_data = {
             "content":
-                "@-here {author} uploaded **{title}** at {url}".format(
+                "@here {author} uploaded **{title}** at {url}".format(
                     author=data["author"][:256],
                     title=data["title"][:256],
                     url=data["url"][:256]

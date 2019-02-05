@@ -1,0 +1,14 @@
+[Unit]
+Description=Webhook relay for Friend Computer
+Documentation=https://github.com/kav2k/friend_computer_webhook
+After=network.target
+
+[Service]
+Type=simple
+WorkingDirectory=/opt/friend_computer_webhook
+ExecStart=/opt/friend_computer_webhook/webhook_relay.py
+Restart=on-failure
+User=friend_computer
+
+[Install]
+WantedBy=multi-user.target
