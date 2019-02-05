@@ -18,6 +18,7 @@
     * `authKey` is an arbitrary string that must be present in POST requests.
     * `port` is the TCP port to listen for IFTTT requests.
     * `host` is the hostname / IP to bind to. Set as `""` to listen on all interfaces.
+    * `filters` is an array of (escaped) regular expressions to drop certain paragraphs from descriptions.
 
 3. (Optional) Set up a "real" webserver as reverse proxy.
 

@@ -5,9 +5,16 @@ from http.server import HTTPServer, BaseHTTPRequestHandler
 import requests
 import json
 from functools import reduce
+import re
 
 
 class Server(BaseHTTPRequestHandler):
+    def do_HEAD(self):
+        self.send_json({
+            'success': False,
+            'message': 'Wrong method, POST expected'
+        }, 400)
+
     def do_GET(self):
         self.send_json({
             'success': False,
@@ -51,26 +58,42 @@ class Server(BaseHTTPRequestHandler):
         post_data = {
             "content":
                 "@-here {author} uploaded **{title}** at {url}".format(
-                    author=data["author"],
-                    title=data["title"],
-                    url=data["url"]
+                    author=data["author"][:256],
+                    title=data["title"][:256],
+                    url=data["url"][:256]
                 )
         }
         print("POST head")
-        requests.post(config["discordWebhookURL"], data=post_data)
+        self.relay_json(post_data)
+        # requests.post(config["discordWebhookURL"], data=post_data)
 
-        descriptions = split_text(data["description"], 2000)
+        descriptions = split_text(filter_text(data["description"]), 2048)
         page = 1
         for description in descriptions:
             post_data = {
-                "content": description
+                "embeds": [{
+                    "type": "rich",
+                    "description": description
+                }]
             }
+            if page == 1:
+                post_data["embeds"][0]["title"] = data["title"][:256]
             print("POST description {}".format(page))
             page += 1
 
-            requests.post(config["discordWebhookURL"], data=post_data)
+            self.relay_json(post_data)
+            # requests.post(config["discordWebhookURL"], data=post_data)
 
         return None
+
+    def relay_json(self, data):
+        requests.post(
+            config["discordWebhookURL"],
+            data=json.dumps(data).encode('utf-8'),
+            headers={
+                "Content-Type": "application/json"
+            }
+        )
 
     def send_json(self, obj, status=200):
         self.send_response(status)
@@ -79,59 +102,113 @@ class Server(BaseHTTPRequestHandler):
         self.wfile.write(json.dumps(obj).encode())
 
 
-def split_text(text, limit, delimiter="\n"):
+def filter_text(text):
+    paragraphs = text.split("\n")
+
+    def try_match(line):
+        for regexp in patterns:
+            if regexp.match(line):
+                return False
+        return True
+
+    # Filter paragraphs according to config
+    paragraphs = [paragraph for paragraph in paragraphs if try_match(paragraph)]
+
+    return "\n".join(paragraphs)
+
+
+def split_text(text, limit):
     def paragraph_splitter(result, paragraph):
         if len(paragraph) <= limit:
+            # If a paragraph can fit in one message, just add it
             result.append(paragraph)
         else:
+            # If a paragraph is too long, split it
             while len(paragraph):
-                result.append("{}[...]".format(paragraph[:limit - 5]))
-                paragraph = paragraph[limit - 5:]
+                if len(paragraph) > limit:
+                    # Remaining portion still too long
+                    # Try to split at the last space possible
+                    idx = paragraph.rfind(' ', 0, limit - 5) + 1
+                    if idx < 1:
+                        # If no space found, split as far as possible
+                        idx = limit - 5
+
+                    # Add the chopped-off portion, proceed with rest
+                    result.append(paragraph[:idx])
+                    paragraph = paragraph[idx:]
+                else:
+                    # Remaining portion OK, just add it
+                    result.append(paragraph)
+                    paragraph = ""
+
+                if len(paragraph):
+                    # If this was not the last portion, add continuation mark
+                    result[-1] += "[...]"
 
         return result
 
     if limit < 6:
         raise RuntimeError("Limit too narrow to split")
 
-    paragraphs = text.split(delimiter)
+    # Split text into paragraphs
+    paragraphs = text.split("\n")
 
+    # Split up paragraphs that are too long
     paragraphs = reduce(paragraph_splitter, paragraphs, [])
 
+    # Each paragraph should already be small enough
+    for paragraph in paragraphs:
+        assert(len(paragraph) < limit)
+
+    # Assemble chunks as large as possible out of paragraphs
     result = []
     candidate = ""
     quota = limit
     for paragraph in paragraphs:
         if len(paragraph) + 1 <= quota:
+            # We still have space for the paragraph + "\n"
             if len(candidate) > 0:
-                candidate += delimiter
+                candidate += "\n"
                 quota -= 1
             candidate += paragraph
             quota -= len(paragraph)
         else:
+            # We can't add another paragraph, output current chunk
             if len(candidate) > 0:
                 result.append(candidate)
                 candidate = ""
                 quota = limit
-            if len(paragraph) <= quota:
-                candidate += paragraph
-                quota -= len(paragraph)
-            else:
-                raise RuntimeError("Text splitting failed")
+            assert(len(paragraph) < quota)
 
-    if len(candidate):
+            # Start a new candidate chunk
+            candidate += paragraph
+            quota -= len(paragraph)
+
+    # Add last chunk, if non-empty
+    if len(candidate.strip()):
         result.append(candidate)
+
+    # Strip extra "\n"
+    result = [part.strip() for part in result]
+
+    for part in result:
+        assert(len(part) < limit)
 
     return result
 
 
 if __name__ == '__main__':
-    global config
+    global config, patterns
     try:
         with open("config.json") as config_file:
             config = json.load(config_file)
     except IOError:
         print("Error reading config file")
         exit(1)
+
+    patterns = []
+    for pattern in config.get("filters", []):
+        patterns.append(re.compile(pattern))
 
     httpd = HTTPServer((config["host"], config["port"]), Server)
     print(time.asctime(), 'Server UP - %s:%s' % (config["host"], config["port"]))
