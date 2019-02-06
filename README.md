@@ -41,25 +41,25 @@
 ## IFTTT setup
 
 1. If not owner of the YouTube channel in question, make sure your YouTube account is subscribed to that channel.
-1. Create an [IFTTT](https://ifttt.com/) account and [connect YouTube](https://ifttt.com/services/youtube/settings) integration with the above account.
-2. [Create a new applet](https://ifttt.com/create):
+2. Create an [IFTTT](https://ifttt.com/) account and [connect YouTube](https://ifttt.com/services/youtube/settings) integration with the above account.
+3. [Create a new applet](https://ifttt.com/create):
     * Service: **YouTube**
     * Trigger:
         * For own channel: **New public video uploaded by you**
         * For third-party channel: **New public video from subscriptions**
     * Action service: **Webhooks**
     * Action: **Make a web request**
-3. Fill out action fields:
+4. Fill out action fields:
     * URL: Provide an **internet-reachable URL** to the webhook relay
     * Method: **POST**
     * Content Type: **application/json**
-    * Body:
+    * Body (note the `<<<>>>` escapes!):
         ```json
         {
-          "author": "{{AuthorName}}",
-          "title": "{{Title}}",
-          "url": "{{Url}}",
-          "description": "{{Description}}",
-          "authKey": "<authKey set up in config.json>"
+          "author": "<<<{{AuthorName}}>>>",
+          "title": "<<<{{Title}}>>>",
+          "url": "<<<{{Url}}>>>",
+          "description": "<<<{{Description}}>>>",
+          "authKey": "authKey set up in config.json"
         }
         ```

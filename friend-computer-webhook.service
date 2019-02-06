@@ -5,8 +5,9 @@ After=network.target
 
 [Service]
 Type=simple
+StandardOutput=journal
 WorkingDirectory=/opt/friend_computer_webhook
-ExecStart=/opt/friend_computer_webhook/webhook_relay.py
+ExecStart=/usr/bin/python3 -u /opt/friend_computer_webhook/webhook_relay.py
 Restart=on-failure
 User=friend_computer
 
