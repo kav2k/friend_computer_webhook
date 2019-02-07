@@ -8,11 +8,19 @@
 
 **Solution:** Provide a wehbook relay "proxy" that splits the data into several Discord messages.
 
+![Screenshot](samples/screenshot.png)
+
 ## Installation
 
-1. Install packages as per `requirements.txt` (using python3)
+1. Create a non-porivileged user for running this. DO NOT RUN AS ROOT.
 
-2. Copy `config.example.json` as `config.json`. Fill out the fields:
+1. Install packages as per `requirements.txt` (using python3) as that user.
+
+    ```bash
+    pip3 install --user -r requirements.txt
+    ```
+
+2. Copy [`samples/config.example.json`](samples/config.example.json) as `config.json`. Fill out the fields:
 
     * `discordWebhookURL` is the Discord webhook endpoint to POST data to.
     * `authKey` is an arbitrary string that must be present in POST requests.
@@ -32,7 +40,7 @@
 
 4. (Optional) Set up a systemd service unit.
 
-    * Adapt values in `friend-computer-webhook.service` to real user/path
+    * Adapt values in [`samples/friend-computer-webhook.service`](samples/friend-computer-webhook.service) to real user/path
     * Copy to `/etc/systemd/system/`
     * Run `sudo systemctl daemon-reload`
     * Test service with `sudo systemctl start friend-computer-webhook` and `sudo systemctl status friend-computer-webhook`
