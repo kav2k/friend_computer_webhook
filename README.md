@@ -71,3 +71,5 @@
           "authKey": "authKey set up in config.json"
         }
         ```
+
+**P.S.** The `<<<>>>` escapes seem to have broken recently at IFTTT end for long descriptions; added code to work around it.

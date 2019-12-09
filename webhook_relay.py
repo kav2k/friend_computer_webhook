@@ -22,6 +22,15 @@ class Server(BaseHTTPRequestHandler):
         }, 400)
 
     def do_POST(self):
+        def escaper(s):
+            s = s[1]
+            print("Replacing:\n{}".format(s))
+            s = s.replace("\\", "\\\\")
+            s = s.replace("\r\n", "\\n")
+            s = s.replace("\n", "\\n")
+            s = s.replace("\"", "\\\"")
+            return s
+
         if self.headers.get("Content-type") != "application/json":
             print(self.headers)
             self.send_json({
@@ -31,6 +40,9 @@ class Server(BaseHTTPRequestHandler):
         else:
             content_length = int(self.headers.get('Content-Length', 0))
             post_body = self.rfile.read(content_length).decode('utf-8')
+            print("Decoded: {}".format(post_body))
+            post_body = re.sub(r"\<\<\<([\s\S]*)\>\>\>", escaper, post_body, flags=re.M)
+            print("Edited: {}".format(post_body))
             data = json.loads(post_body)
 
             if data.get('authKey') == config['authKey']:
