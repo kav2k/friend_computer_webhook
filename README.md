@@ -12,7 +12,7 @@
 
 ## Installation
 
-1. Create a non-porivileged user for running this. DO NOT RUN AS ROOT.
+1. Create a non-privileged user for running this. DO NOT RUN AS ROOT.
 
 1. Install packages as per `requirements.txt` (using python3) as that user.
 
